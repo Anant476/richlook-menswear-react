@@ -229,7 +229,7 @@ const Mens = () => {
                 className="w-full btn-primary hover:scale-105 transition-transform"
                 onClick={() => orderOnWhatsApp(product)}
               >
-                 Order Now
+                🛒 Order Now
               </Button>
 
             </div>
