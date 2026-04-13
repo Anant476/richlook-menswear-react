@@ -64,11 +64,18 @@ const searchedProducts = filteredProducts.filter(product =>
   }
 
   const message = encodeURIComponent(
-    `Hi 👋 I want to order this mens product from Rich Look Mens Wear:\n\n` +
-    `👔 Product: ${product.name}\n` +
-    `📏 Size: ${selectedSize}\n` +
-    `💰 Price: ${product.price}\n\n` +
-    `Please confirm availability.`
+`🛍️ *Rich Look Menswear Order*
+
+👔 Product: ${product.name}
+📏 Size: ${selectedSize}
+💰 Price: ${product.price}
+
+🚚 Please confirm:
+• Availability
+• Delivery time
+• Payment options
+
+✨ Thank you!`
   );
 
   window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${message}`, "_blank");
@@ -206,10 +213,10 @@ const searchedProducts = filteredProducts.filter(product =>
 </div>
 
               <Button
-                className="w-full btn-primary"
+                className="w-full btn-primary hover:scale-105 transition-transform"
                 onClick={() => orderOnWhatsApp(product)}
               >
-                Order on WhatsApp
+                🛒 Order Now
               </Button>
             </div>
           </div>
