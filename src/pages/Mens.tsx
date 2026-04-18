@@ -245,65 +245,106 @@ const Mens = () => {
         ))}
       </div>
       {selectedProduct && (
-  <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center px-4">
-    
+  <div
+    className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center px-4"
+    onClick={() => setSelectedProduct(null)}
+  >
     <div
-      className="bg-white rounded-xl max-w-md w-full p-4 relative"
+      className="bg-white rounded-2xl max-w-3xl w-full overflow-hidden shadow-2xl animate-fadeIn"
       onClick={(e) => e.stopPropagation()}
     >
-      
-      {/* Close */}
+
+      <div className="grid grid-cols-1 md:grid-cols-2">
+
+        {/* LEFT: IMAGE */}
+        <div className="bg-gray-100">
+          <img
+            src={selectedProduct.image}
+            alt={selectedProduct.name}
+            className="w-full h-72 md:h-full object-cover"
+          />
+        </div>
+
+        {/* RIGHT: DETAILS */}
+        <div className="p-6 flex flex-col justify-between">
+
+          {/* TOP */}
+          <div>
+
+            <h2 className="text-xl font-bold mb-2">
+              {selectedProduct.name}
+            </h2>
+
+            {/* Rating */}
+            <div className="flex items-center gap-2 mb-3">
+              <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+              <span className="text-sm">{selectedProduct.rating}</span>
+            </div>
+
+            {/* Price */}
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-2xl font-bold text-primary">
+                {selectedProduct.price}
+              </span>
+
+              {selectedProduct.originalPrice && (
+                <span className="text-sm line-through text-gray-400">
+                  {selectedProduct.originalPrice}
+                </span>
+              )}
+            </div>
+
+            {/* Selling trigger */}
+            <p className="text-sm text-green-600 font-medium mb-4">
+              🔥 Limited Stock Available
+            </p>
+
+            {/* Sizes */}
+            <p className="text-sm font-medium mb-2">Select Size</p>
+
+            <div className="flex gap-2 flex-wrap mb-6">
+              {getSizesForCategory(selectedProduct.category).map(size => (
+                <button
+                  key={size}
+                  onClick={() =>
+                    setSelectedSizes({
+                      ...selectedSizes,
+                      [selectedProduct.id]: size
+                    })
+                  }
+                  className={`px-4 py-2 border rounded-md text-sm font-medium transition ${
+                    selectedSizes[selectedProduct.id] === size
+                      ? "bg-primary text-white"
+                      : "hover:border-primary"
+                  }`}
+                >
+                  {size}
+                </button>
+              ))}
+            </div>
+
+          </div>
+
+          {/* BOTTOM BUTTON */}
+          <Button
+            className="w-full btn-primary text-base py-3 hover:scale-105 transition"
+            onClick={() => orderOnWhatsApp(selectedProduct)}
+          >
+            🛒 Order on WhatsApp
+          </Button>
+
+        </div>
+      </div>
+
+      {/* CLOSE BUTTON */}
       <button
-        className="absolute top-2 right-3 text-xl"
+        className="absolute top-3 right-4 text-white text-2xl"
         onClick={() => setSelectedProduct(null)}
       >
         ✕
       </button>
 
-      {/* Image */}
-      <img
-        src={selectedProduct.image}
-        className="w-full h-60 object-cover rounded-lg mb-4"
-      />
-
-      {/* Name */}
-      <h2 className="text-lg font-bold mb-2">
-        {selectedProduct.name}
-      </h2>
-
-      {/* Price */}
-      <p className="text-xl font-bold mb-3">
-        {selectedProduct.price}
-      </p>
-
-      {/* Sizes */}
-      <div className="flex gap-2 flex-wrap mb-4">
-        {getSizesForCategory(selectedProduct.category).map(size => (
-          <button
-            key={size}
-            onClick={() =>
-              setSelectedSizes({
-                ...selectedSizes,
-                [selectedProduct.id]: size
-              })
-            }
-            className="px-3 py-1 border rounded"
-          >
-            {size}
-          </button>
-        ))}
-      </div>
-
-      {/* Order */}
-      <Button
-        className="w-full"
-        onClick={() => orderOnWhatsApp(selectedProduct)}
-      >
-        🛒 Order Now
-      </Button>
-
     </div>
-
   </div>
 )}
     </div>
