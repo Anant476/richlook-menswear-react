@@ -17,6 +17,7 @@ const categories = [
 ];
 
 const Mens = () => {
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [activeCategory, setActiveCategory] = useState("All");
   const [sortBy, setSortBy] = useState("popular");
   const [selectedSizes, setSelectedSizes] = useState<Record<number, string>>({});
@@ -151,7 +152,11 @@ const Mens = () => {
       {/* PRODUCTS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-4 pb-16">
         {sortedProducts.map(product => (
-          <div key={product.id} className="product-card relative">
+          <div
+  key={product.id}
+  className="product-card relative cursor-pointer"
+  onClick={() => setSelectedProduct(product)}
+>
 
             {/* BADGES */}
             {product.badge && (
@@ -226,9 +231,12 @@ const Mens = () => {
 
               {/* BUTTON */}
               <Button
-                className="w-full btn-primary hover:scale-105 transition-transform"
-                onClick={() => orderOnWhatsApp(product)}
-              >
+  className="w-full btn-primary hover:scale-105 transition-transform"
+  onClick={(e) => {
+    e.stopPropagation();
+    orderOnWhatsApp(product);
+  }}
+>
                 🛒 Order Now
               </Button>
 
@@ -236,6 +244,68 @@ const Mens = () => {
           </div>
         ))}
       </div>
+      {selectedProduct && (
+  <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center px-4">
+    
+    <div
+      className="bg-white rounded-xl max-w-md w-full p-4 relative"
+      onClick={(e) => e.stopPropagation()}
+    >
+      
+      {/* Close */}
+      <button
+        className="absolute top-2 right-3 text-xl"
+        onClick={() => setSelectedProduct(null)}
+      >
+        ✕
+      </button>
+
+      {/* Image */}
+      <img
+        src={selectedProduct.image}
+        className="w-full h-60 object-cover rounded-lg mb-4"
+      />
+
+      {/* Name */}
+      <h2 className="text-lg font-bold mb-2">
+        {selectedProduct.name}
+      </h2>
+
+      {/* Price */}
+      <p className="text-xl font-bold mb-3">
+        {selectedProduct.price}
+      </p>
+
+      {/* Sizes */}
+      <div className="flex gap-2 flex-wrap mb-4">
+        {getSizesForCategory(selectedProduct.category).map(size => (
+          <button
+            key={size}
+            onClick={() =>
+              setSelectedSizes({
+                ...selectedSizes,
+                [selectedProduct.id]: size
+              })
+            }
+            className="px-3 py-1 border rounded"
+          >
+            {size}
+          </button>
+        ))}
+      </div>
+
+      {/* Order */}
+      <Button
+        className="w-full"
+        onClick={() => orderOnWhatsApp(selectedProduct)}
+      >
+        🛒 Order Now
+      </Button>
+
+    </div>
+
+  </div>
+)}
     </div>
   );
 };
