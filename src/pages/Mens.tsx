@@ -17,6 +17,7 @@ const categories = [
 ];
 
 const Mens = () => {
+  const [cart, setCart] = useState<any[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [activeCategory, setActiveCategory] = useState("All");
   const [sortBy, setSortBy] = useState("popular");
@@ -148,7 +149,14 @@ const Mens = () => {
           className="w-full border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
         />
       </div>
-
+        <div className="px-4 flex justify-end mb-4">
+  <button
+    onClick={() => alert("Cart coming next step")}
+    className="bg-primary text-white px-4 py-2 rounded-lg"
+  >
+    🛒 Cart ({cart.length})
+  </button>
+</div>
       {/* PRODUCTS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-4 pb-16">
         {sortedProducts.map(product => (
@@ -239,7 +247,29 @@ const Mens = () => {
 >
                 🛒 Order Now
               </Button>
+            <Button
+  variant="outline"
+  className="w-full mt-2"
+  onClick={(e) => {
+    e.stopPropagation();
 
+    const selectedSize = selectedSizes[product.id];
+
+    if (!selectedSize) {
+      alert("Select size first");
+      return;
+    }
+
+    const item = {
+      ...product,
+      size: selectedSize
+    };
+
+    setCart([...cart, item]);
+  }}
+>
+  ➕ Add to Cart
+</Button>
             </div>
           </div>
         ))}
@@ -345,6 +375,38 @@ const Mens = () => {
       </button>
 
     </div>
+  </div>
+)}
+{cart.length > 0 && (
+  <div className="fixed bottom-4 right-4 bg-white shadow-xl p-4 rounded-xl w-72 z-50">
+
+    <h3 className="font-bold mb-2">Your Cart</h3>
+
+    <div className="max-h-40 overflow-y-auto text-sm">
+      {cart.map((item, index) => (
+        <div key={index} className="mb-2 border-b pb-1">
+          <p>{item.name}</p>
+          <p className="text-xs">Size: {item.size}</p>
+        </div>
+      ))}
+    </div>
+
+    <Button
+      className="w-full mt-3"
+      onClick={() => {
+        const message = encodeURIComponent(
+          "🛍️ *Rich Look Menswear Order*\n\n" +
+          cart.map((item, i) =>
+            `${i + 1}. ${item.name} (${item.size}) - ${item.price}`
+          ).join("\n")
+        );
+
+        window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${message}`);
+      }}
+    >
+      Order All on WhatsApp
+    </Button>
+
   </div>
 )}
     </div>
