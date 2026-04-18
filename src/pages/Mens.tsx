@@ -4,127 +4,150 @@ import { Button } from "@/components/ui/button";
 import { WHATSAPP_NUMBER } from "@/config/whatsapp.ts";
 import { mensProducts } from "@/data/mensProducts";
 
-const categories = ["All", "T-Shirts", "Shirts", "Jeans", "Cargos", "Pants"];
+const categories = [
+  "All",
+  "T-Shirts",
+  "Shirts",
+  "Jeans",
+  "Cargos",
+  "Pants",
+  "Kurtas"
+];
 
 const Mens = () => {
-  const [cart, setCart] = useState<any[]>([]);
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<any>(null);
-  const [selectedSizes, setSelectedSizes] = useState<Record<number, string>>({});
   const [activeCategory, setActiveCategory] = useState("All");
-
-  // SIZE LOGIC
-  const getSizes = (category: string) => {
-    if (["Shirts", "T-Shirts"].includes(category)) return ["S", "M", "L", "XL"];
-    return ["28", "30", "32", "34"];
-  };
-
-  // ADD TO CART
-  const addToCart = (product: any) => {
-    const size = selectedSizes[product.id];
-    if (!size) return alert("Select size first");
-
-    const exists = cart.find(
-      (item) => item.id === product.id && item.size === size
-    );
-
-    if (exists) {
-      setCart(
-        cart.map((item) =>
-          item.id === product.id && item.size === size
-            ? { ...item, qty: item.qty + 1 }
-            : item
-        )
-      );
-    } else {
-      setCart([...cart, { ...product, size, qty: 1 }]);
-    }
-
-    setIsCartOpen(true);
-  };
-
-  // REMOVE ITEM
-  const removeItem = (index: number) => {
-    const updated = cart.filter((_, i) => i !== index);
-    setCart(updated);
-
-    if (updated.length === 0) setIsCartOpen(false); // 🔥 FIX
-  };
-
-  // UPDATE QTY
-  const updateQty = (index: number, type: "inc" | "dec") => {
-    const updated = [...cart];
-
-    if (type === "inc") updated[index].qty++;
-    if (type === "dec") {
-      if (updated[index].qty === 1) return removeItem(index);
-      updated[index].qty--;
-    }
-
-    setCart(updated);
-  };
+  const [selectedSizes, setSelectedSizes] = useState<Record<number, string>>({});
+  const [searchQuery, setSearchQuery] = useState("");
 
   // FILTER
-  const filtered =
+  const filteredProducts =
     activeCategory === "All"
       ? mensProducts
-      : mensProducts.filter((p) => p.category === activeCategory);
+      : mensProducts.filter(p => p.category === activeCategory);
+
+  // SEARCH
+  const searchedProducts = filteredProducts.filter(product =>
+    product.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // SIZE LOGIC
+  const getSizesForCategory = (category: string) => {
+    if (["Shirts", "T-Shirts", "Kurtas"].includes(category)) {
+      return ["S", "M", "L", "XL"];
+    }
+    if (["Pants", "Jeans", "Cargos"].includes(category)) {
+      return ["28", "30", "32", "34"];
+    }
+    return [];
+  };
+
+  // WHATSAPP ORDER
+  const orderOnWhatsApp = (product: any) => {
+    const selectedSize = selectedSizes[product.id];
+
+    if (!selectedSize) {
+      alert("Please select a size first.");
+      return;
+    }
+
+    const message = encodeURIComponent(
+`🛍️ *Rich Look Menswear Order*
+
+👔 Product: ${product.name}
+📏 Size: ${selectedSize}
+💰 Price: ${product.price}
+
+Please confirm availability and delivery.`
+    );
+
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${message}`, "_blank");
+  };
 
   return (
-    <div className="min-h-screen bg-background p-4">
+    <div className="min-h-screen bg-background">
 
-      {/* CART BUTTON */}
-      <div className="flex justify-end mb-4">
-        <button
-          onClick={() => setIsCartOpen(true)}
-          className="bg-black text-white px-4 py-2 rounded-lg"
-        >
-          🛒 {cart.length}
-        </button>
+      {/* HEADER */}
+      <div className="py-10 text-center">
+        <h1 className="text-3xl sm:text-4xl font-bold mb-2">
+          Mens Collection
+        </h1>
+        <p className="text-muted-foreground">
+          Elevate your style with Rich Look
+        </p>
       </div>
 
-      {/* CATEGORY */}
-      <div className="flex gap-2 mb-4">
-        {categories.map((c) => (
+      {/* CATEGORY FILTER */}
+      <div className="flex gap-3 overflow-x-auto px-4 pb-4">
+        {categories.map(cat => (
           <button
-            key={c}
-            onClick={() => setActiveCategory(c)}
-            className={`px-3 py-1 border rounded ${
-              activeCategory === c ? "bg-black text-white" : ""
+            key={cat}
+            onClick={() => setActiveCategory(cat)}
+            className={`px-4 py-2 rounded-full text-sm border ${
+              activeCategory === cat
+                ? "bg-black text-white"
+                : "bg-background"
             }`}
           >
-            {c}
+            {cat}
           </button>
         ))}
       </div>
 
-      {/* PRODUCTS */}
-      <div className="grid grid-cols-2 gap-4">
-        {filtered.map((product) => (
-          <div
-            key={product.id}
-            className="border rounded-lg overflow-hidden cursor-pointer"
-            onClick={() => setSelectedProduct(product)}
-          >
-            <img src={product.image} className="h-40 w-full object-cover" />
+      {/* SEARCH */}
+      <div className="px-4 mb-4">
+        <input
+          type="text"
+          placeholder="Search shirts, t-shirts, cargos..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full border rounded-lg px-4 py-2 text-sm"
+        />
+      </div>
 
-            <div className="p-2">
-              <h3 className="text-sm font-semibold">{product.name}</h3>
-              <p className="text-sm">{product.price}</p>
+      {/* PRODUCTS */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-4 pb-16">
+        {searchedProducts.map(product => (
+          <div key={product.id} className="product-card">
+
+            <img
+              src={product.image}
+              alt={product.name}
+              className="w-full h-56 object-cover"
+            />
+
+            <div className="p-4">
+              <h3 className="font-semibold mb-1">{product.name}</h3>
+
+              <div className="flex items-center gap-1 mb-2">
+                <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                <span className="text-sm">{product.rating}</span>
+              </div>
+
+              {/* PRICE */}
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-lg font-bold">
+                  {product.price}
+                </span>
+
+                {product.originalPrice && (
+                  <span className="text-sm line-through text-muted-foreground">
+                    {product.originalPrice}
+                  </span>
+                )}
+              </div>
 
               {/* SIZE SELECT */}
-              <div className="flex gap-2 mt-2">
-                {getSizes(product.category).map((size) => (
+              <div className="flex gap-2 mb-3 flex-wrap">
+                {getSizesForCategory(product.category).map(size => (
                   <button
                     key={size}
-                    onClick={(e) => {
-                      e.stopPropagation(); // 🔥 IMPORTANT FIX
+                    onClick={() =>
                       setSelectedSizes({
                         ...selectedSizes,
-                        [product.id]: size,
-                      });
-                    }}
-                    className={`px-2 py-1 border text-xs ${
+                        [product.id]: size
+                      })
+                    }
+                    className={`px-3 py-1 border rounded-md text-sm ${
                       selectedSizes[product.id] === size
                         ? "bg-black text-white"
                         : ""
@@ -135,118 +158,18 @@ const Mens = () => {
                 ))}
               </div>
 
-              {/* ADD BUTTON */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  addToCart(product);
-                }}
-                className="mt-2 w-full bg-black text-white py-1 text-sm rounded"
+              {/* ORDER BUTTON */}
+              <Button
+                className="w-full bg-black text-white"
+                onClick={() => orderOnWhatsApp(product)}
               >
-                Add to Cart
-              </button>
+                Order on WhatsApp
+              </Button>
+
             </div>
           </div>
         ))}
       </div>
-
-      {/* POPUP */}
-      {selectedProduct && (
-        <div
-          className="fixed inset-0 bg-black/60 flex items-center justify-center"
-          onClick={() => setSelectedProduct(null)}
-        >
-          <div
-            className="bg-white p-4 w-80 rounded-lg"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <img src={selectedProduct.image} className="mb-2" />
-            <h2 className="font-bold">{selectedProduct.name}</h2>
-
-            <div className="flex gap-2 my-2">
-              {getSizes(selectedProduct.category).map((size) => (
-                <button
-                  key={size}
-                  onClick={() =>
-                    setSelectedSizes({
-                      ...selectedSizes,
-                      [selectedProduct.id]: size,
-                    })
-                  }
-                  className={`px-2 py-1 border ${
-                    selectedSizes[selectedProduct.id] === size
-                      ? "bg-black text-white"
-                      : ""
-                  }`}
-                >
-                  {size}
-                </button>
-              ))}
-            </div>
-
-            <Button onClick={() => addToCart(selectedProduct)}>
-              Add to Cart
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* CART DRAWER */}
-      {isCartOpen && (
-        <div className="fixed inset-0 z-50">
-          <div
-            className="absolute inset-0 bg-black/40"
-            onClick={() => setIsCartOpen(false)}
-          />
-
-          <div className="absolute right-0 top-0 w-80 h-full bg-white p-4 overflow-y-auto">
-            <h2 className="font-bold mb-4">Your Cart</h2>
-
-            {cart.length === 0 ? (
-              <p>No items</p>
-            ) : (
-              cart.map((item, i) => (
-                <div key={i} className="border-b pb-2 mb-2">
-                  <p className="text-sm">{item.name}</p>
-                  <p className="text-xs">Size: {item.size}</p>
-
-                  <div className="flex items-center gap-2 mt-1">
-                    <button onClick={() => updateQty(i, "dec")}>-</button>
-                    <span>{item.qty}</span>
-                    <button onClick={() => updateQty(i, "inc")}>+</button>
-                  </div>
-
-                  <button
-                    onClick={() => removeItem(i)}
-                    className="text-red-500 text-xs mt-1"
-                  >
-                    Remove
-                  </button>
-                </div>
-              ))
-            )}
-
-            {cart.length > 0 && (
-              <Button
-                className="w-full mt-4"
-                onClick={() => {
-                  const msg = encodeURIComponent(
-                    cart
-                      .map(
-                        (i) =>
-                          `${i.name} (${i.size}) x${i.qty} - ${i.price}`
-                      )
-                      .join("\n")
-                  );
-                  window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`);
-                }}
-              >
-                Order on WhatsApp
-              </Button>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 };
