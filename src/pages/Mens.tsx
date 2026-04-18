@@ -18,7 +18,9 @@ const categories = [
 
 const Mens = () => {
   const [cart, setCart] = useState<any[]>([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
+
   const [activeCategory, setActiveCategory] = useState("All");
   const [sortBy, setSortBy] = useState("popular");
   const [selectedSizes, setSelectedSizes] = useState<Record<number, string>>({});
@@ -84,7 +86,7 @@ const Mens = () => {
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${message}`, "_blank");
   };
 
-  // DISCOUNT %
+  // DISCOUNT
   const getDiscountPercent = (price: string, originalPrice?: string) => {
     if (!originalPrice) return null;
 
@@ -105,16 +107,26 @@ const Mens = () => {
         backgroundImage={mensHero}
       />
 
+      {/* CART BUTTON */}
+      <div className="px-4 flex justify-end mt-4">
+        <button
+          onClick={() => setIsCartOpen(true)}
+          className="bg-primary text-white px-4 py-2 rounded-lg"
+        >
+          🛒 Cart ({cart.length})
+        </button>
+      </div>
+
       {/* CATEGORY FILTER */}
       <div className="flex gap-3 overflow-x-auto px-4 py-4">
         {categories.map(cat => (
           <button
             key={cat}
             onClick={() => setActiveCategory(cat)}
-            className={`px-4 py-2 rounded-full whitespace-nowrap text-sm font-medium border transition ${
+            className={`px-4 py-2 rounded-full text-sm border ${
               activeCategory === cat
                 ? "bg-primary text-white"
-                : "bg-background text-foreground hover:bg-primary/10"
+                : "hover:bg-primary/10"
             }`}
           >
             {cat}
@@ -122,293 +134,152 @@ const Mens = () => {
         ))}
       </div>
 
-      {/* SORT + COUNT */}
-      <div className="flex justify-between items-center px-4 mb-4">
-        <p className="text-sm text-muted-foreground">
-          {sortedProducts.length} Products
-        </p>
+      {/* SORT + SEARCH */}
+      <div className="flex justify-between px-4 mb-4">
+        <p className="text-sm">{sortedProducts.length} Products</p>
 
         <select
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value)}
-          className="border rounded-lg px-3 py-2 text-sm bg-background"
+          className="border px-2 py-1 rounded"
         >
-          <option value="popular">Sort: Popular</option>
-          <option value="low-high">Price ↑</option>
-          <option value="high-low">Price ↓</option>
+          <option value="popular">Popular</option>
+          <option value="low-high">Low → High</option>
+          <option value="high-low">High → Low</option>
         </select>
       </div>
 
-      {/* SEARCH */}
       <div className="px-4 mb-6">
         <input
           type="text"
-          placeholder="Search shirts, t-shirts, cargos..."
+          placeholder="Search..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          className="w-full border px-3 py-2 rounded"
         />
       </div>
-        <div className="px-4 flex justify-end mb-4">
-  <button
-    onClick={() => alert("Cart coming next step")}
-    className="bg-primary text-white px-4 py-2 rounded-lg"
-  >
-    🛒 Cart ({cart.length})
-  </button>
-</div>
+
       {/* PRODUCTS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-4 pb-16">
         {sortedProducts.map(product => (
           <div
-  key={product.id}
-  className="product-card relative cursor-pointer"
-  onClick={() => setSelectedProduct(product)}
->
-
-            {/* BADGES */}
-            {product.badge && (
-              <span className="absolute top-3 left-3 z-10 bg-red-500 text-white text-xs px-3 py-1 rounded-full">
-                {product.badge}
-              </span>
-            )}
-
-            {product.originalPrice && (
-              <span className="absolute top-3 right-3 z-10 bg-green-600 text-white text-xs px-2 py-1 rounded">
-                {getDiscountPercent(product.price, product.originalPrice)}
-              </span>
-            )}
-
-            {/* IMAGE */}
-            <img
-              src={product.image}
-              alt={product.name}
-              className="w-full h-56 object-cover"
-            />
+            key={product.id}
+            className="product-card cursor-pointer"
+            onClick={() => setSelectedProduct(product)}
+          >
+            <img src={product.image} className="w-full h-56 object-cover" />
 
             <div className="p-4 space-y-2">
+              <h3>{product.name}</h3>
 
-              {/* NAME */}
-              <h3 className="font-semibold">{product.name}</h3>
-
-              {/* RATING */}
               <div className="flex items-center gap-1">
-                <Star className="h-4 w-4 text-accent fill-accent" />
-                <span className="text-sm">{product.rating}</span>
+                <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                {product.rating}
               </div>
 
-              {/* PRICE */}
-              <div className="flex items-center gap-2">
-                <span className="text-lg font-bold text-primary">
-                  {product.price}
-                </span>
-
-                {product.originalPrice && (
-                  <span className="text-sm text-muted-foreground line-through">
-                    {product.originalPrice}
-                  </span>
-                )}
-              </div>
-
-              {/* 🔥 SELLING TRIGGER */}
-              <p className="text-xs text-green-500 font-medium">
-                🔥 Selling Fast
-              </p>
+              <p className="font-bold">{product.price}</p>
 
               {/* SIZE */}
               <div className="flex gap-2 flex-wrap">
                 {getSizesForCategory(product.category).map(size => (
                   <button
                     key={size}
-                    onClick={() =>
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setSelectedSizes({
                         ...selectedSizes,
                         [product.id]: size
-                      })
-                    }
-                    className={`px-3 py-1.5 border rounded-md text-sm font-medium ${
-                      selectedSizes[product.id] === size
-                        ? "bg-primary text-white"
-                        : "bg-background text-foreground"
-                    }`}
+                      });
+                    }}
+                    className="border px-2 py-1 rounded"
                   >
                     {size}
                   </button>
                 ))}
               </div>
 
-              {/* BUTTON */}
+              {/* ORDER */}
               <Button
-  className="w-full btn-primary hover:scale-105 transition-transform"
-  onClick={(e) => {
-    e.stopPropagation();
-    orderOnWhatsApp(product);
-  }}
->
-                🛒 Order Now
+                onClick={(e) => {
+                  e.stopPropagation();
+                  orderOnWhatsApp(product);
+                }}
+              >
+                Order
               </Button>
-            <Button
-  variant="outline"
-  className="w-full mt-2"
-  onClick={(e) => {
-    e.stopPropagation();
 
-    const selectedSize = selectedSizes[product.id];
+              {/* ADD CART */}
+              <Button
+                variant="outline"
+                onClick={(e) => {
+                  e.stopPropagation();
 
-    if (!selectedSize) {
-      alert("Select size first");
-      return;
-    }
+                  const size = selectedSizes[product.id];
+                  if (!size) return alert("Select size");
 
-    const item = {
-      ...product,
-      size: selectedSize
-    };
+                  setCart(prev => [...prev, { ...product, size }]);
+                  setIsCartOpen(true);
+                }}
+              >
+                Add to Cart
+              </Button>
 
-    setCart([...cart, item]);
-  }}
->
-  ➕ Add to Cart
-</Button>
             </div>
           </div>
         ))}
       </div>
-      {selectedProduct && (
-  <div
-    className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center px-4"
-    onClick={() => setSelectedProduct(null)}
-  >
-    <div
-      className="bg-white rounded-2xl max-w-3xl w-full overflow-hidden shadow-2xl animate-fadeIn"
-      onClick={(e) => e.stopPropagation()}
-    >
 
-      <div className="grid grid-cols-1 md:grid-cols-2">
-
-        {/* LEFT: IMAGE */}
-        <div className="bg-gray-100">
-          <img
-            src={selectedProduct.image}
-            alt={selectedProduct.name}
-            className="w-full h-72 md:h-full object-cover"
+      {/* CART DRAWER */}
+      {isCartOpen && (
+        <div className="fixed inset-0 z-50">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setIsCartOpen(false)}
           />
-        </div>
 
-        {/* RIGHT: DETAILS */}
-        <div className="p-6 flex flex-col justify-between">
+          <div className="absolute right-0 top-0 h-full w-80 bg-white p-4">
+            <h2 className="font-bold mb-4">Cart</h2>
 
-          {/* TOP */}
-          <div>
+            {cart.map((item, i) => (
+              <div key={i} className="mb-2">
+                {item.name} ({item.size})
+              </div>
+            ))}
 
-            <h2 className="text-xl font-bold mb-2">
-              {selectedProduct.name}
-            </h2>
-
-            {/* Rating */}
-            <div className="flex items-center gap-2 mb-3">
-              <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-              <span className="text-sm">{selectedProduct.rating}</span>
-            </div>
-
-            {/* Price */}
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-2xl font-bold text-primary">
-                {selectedProduct.price}
-              </span>
-
-              {selectedProduct.originalPrice && (
-                <span className="text-sm line-through text-gray-400">
-                  {selectedProduct.originalPrice}
-                </span>
-              )}
-            </div>
-
-            {/* Selling trigger */}
-            <p className="text-sm text-green-600 font-medium mb-4">
-              🔥 Limited Stock Available
-            </p>
-
-            {/* Sizes */}
-            <p className="text-sm font-medium mb-2">Select Size</p>
-
-            <div className="flex gap-2 flex-wrap mb-6">
-              {getSizesForCategory(selectedProduct.category).map(size => (
-                <button
-                  key={size}
-                  onClick={() =>
-                    setSelectedSizes({
-                      ...selectedSizes,
-                      [selectedProduct.id]: size
-                    })
-                  }
-                  className={`px-4 py-2 border rounded-md text-sm font-medium transition ${
-                    selectedSizes[selectedProduct.id] === size
-                      ? "bg-primary text-white"
-                      : "hover:border-primary"
-                  }`}
-                >
-                  {size}
-                </button>
-              ))}
-            </div>
-
+            <Button
+              className="w-full mt-4"
+              onClick={() => {
+                const msg = encodeURIComponent(
+                  cart.map(i => `${i.name} (${i.size})`).join("\n")
+                );
+                window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`);
+              }}
+            >
+              Order All
+            </Button>
           </div>
+        </div>
+      )}
 
-          {/* BOTTOM BUTTON */}
-          <Button
-            className="w-full btn-primary text-base py-3 hover:scale-105 transition"
-            onClick={() => orderOnWhatsApp(selectedProduct)}
+      {/* PRODUCT POPUP */}
+      {selectedProduct && (
+        <div
+          className="fixed inset-0 bg-black/70 flex justify-center items-center"
+          onClick={() => setSelectedProduct(null)}
+        >
+          <div
+            className="bg-white p-4 max-w-md w-full"
+            onClick={(e) => e.stopPropagation()}
           >
-            🛒 Order on WhatsApp
-          </Button>
-
+            <img src={selectedProduct.image} />
+            <h2>{selectedProduct.name}</h2>
+            <Button onClick={() => orderOnWhatsApp(selectedProduct)}>
+              Order
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* CLOSE BUTTON */}
-      <button
-        className="absolute top-3 right-4 text-white text-2xl"
-        onClick={() => setSelectedProduct(null)}
-      >
-        ✕
-      </button>
-
-    </div>
-  </div>
-)}
-{cart.length > 0 && (
-  <div className="fixed bottom-4 right-4 bg-white shadow-xl p-4 rounded-xl w-72 z-50">
-
-    <h3 className="font-bold mb-2">Your Cart</h3>
-
-    <div className="max-h-40 overflow-y-auto text-sm">
-      {cart.map((item, index) => (
-        <div key={index} className="mb-2 border-b pb-1">
-          <p>{item.name}</p>
-          <p className="text-xs">Size: {item.size}</p>
-        </div>
-      ))}
-    </div>
-
-    <Button
-      className="w-full mt-3"
-      onClick={() => {
-        const message = encodeURIComponent(
-          "🛍️ *Rich Look Menswear Order*\n\n" +
-          cart.map((item, i) =>
-            `${i + 1}. ${item.name} (${item.size}) - ${item.price}`
-          ).join("\n")
-        );
-
-        window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${message}`);
-      }}
-    >
-      Order All on WhatsApp
-    </Button>
-
-  </div>
-)}
     </div>
   );
 };
