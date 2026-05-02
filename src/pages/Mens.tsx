@@ -1,299 +1,279 @@
-import { useState } from "react";
+// SAME IMPORTS (no change)
+import { useState, useEffect } from "react";
 import { Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WHATSAPP_NUMBER } from "@/config/whatsapp.ts";
 import { mensProducts } from "@/data/mensProducts";
 
-const categories = [
-  "All",
-  "T-Shirts",
-  "Shirts",
-  "Jeans",
-  "Cargos",
-  "Pants",
-  "Kurtas"
-];
+const categories = ["All","T-Shirts","Shirts","Jeans","Cargos","Pants","Kurtas"];
 
 const Mens = () => {
   const [activeCategory, setActiveCategory] = useState("All");
-  const [selectedSizes, setSelectedSizes] = useState<Record<number, string>>({});
+  const [selectedSizes, setSelectedSizes] = useState<Record<number,string>>({});
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [activeImage, setActiveImage] = useState<string|null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [imageIndex, setImageIndex] = useState(0);
 
-  // FILTER
-  const filteredProducts =
-    activeCategory === "All"
-      ? mensProducts
-      : mensProducts.filter(p => p.category === activeCategory);
+  // scroll lock
+  useEffect(()=>{
+    document.body.style.overflow = selectedProduct ? "hidden" : "auto";
+  },[selectedProduct]);
 
-  // SEARCH
-  const searchedProducts = filteredProducts.filter(product =>
-    product.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // ESC
+  useEffect(()=>{
+    const esc=(e:KeyboardEvent)=>{
+      if(e.key==="Escape"){
+        setSelectedProduct(null);
+        setIsFullscreen(false);
+        setActiveImage(null);
+      }
+    };
+    window.addEventListener("keydown",esc);
+    return()=>window.removeEventListener("keydown",esc);
+  },[]);
 
-  // SIZE LOGIC
-  const getSizesForCategory = (category: string) => {
-    if (["Shirts", "T-Shirts", "Kurtas"].includes(category)) {
-      return ["S", "M", "L", "XL"];
-    }
-    if (["Pants", "Jeans", "Cargos"].includes(category)) {
-      return ["28", "30", "32", "34"];
-    }
-    return [];
+  // swipe
+  let startX=0;
+  const handleTouchStart=(e:any)=>startX=e.touches[0].clientX;
+  const handleTouchEnd=(e:any)=>{
+    if(!selectedProduct) return;
+    const imgs = selectedProduct.images?.length ? selectedProduct.images : [selectedProduct.image];
+    const endX=e.changedTouches[0].clientX;
+
+    if(startX-endX>50) setImageIndex(p=>p===imgs.length-1?0:p+1);
+    if(endX-startX>50) setImageIndex(p=>p===0?imgs.length-1:p-1);
   };
 
-  // WHATSAPP ORDER
-  const orderOnWhatsApp = (product: any) => {
-    const selectedSize = selectedSizes[product.id];
+  // filter + search
+  const products = mensProducts
+    .filter(p=>activeCategory==="All"||p.category===activeCategory)
+    .filter(p=>p.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
-    if (!selectedSize) {
-      alert("Please select a size first.");
+  const sizes=(cat:string)=>
+    ["Shirts","T-Shirts","Kurtas"].includes(cat)
+      ?["S","M","L","XL"]
+      :["28","30","32","34"];
+
+  const order = (p:any) => {
+    if (!p) return;
+    const size = selectedSizes[p.id];
+    if(!size) {
+      alert("Please select a size first");
       return;
     }
-
     const message = encodeURIComponent(
-`🛍️ *Rich Look Menswear Order*
-
-👔 Product: ${product.name}
-📏 Size: ${selectedSize}
-💰 Price: ${product.price}
-
-Please confirm availability, sizes, and delivery details.`
-    );
-
+      `🛍️ *New Order - Rich Look Menswear*\n\n` +
+      `👔 *Product:* ${p.name}\n` +
+      `📏 *Size:* ${size}\n` +
+      `💰 *Price:* ${p.price}\n\n` +
+      `📦 Please confirm availability.\n` +
+      `🚚 Also share delivery details.`
+    ); 
+    
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${message}`, "_blank");
   };
 
   return (
-    <div className="min-h-screen bg-background animate-fade-in">
+    <div className="min-h-screen">
 
       {/* HEADER */}
       <div className="py-10 text-center">
-        <h1 className="text-4xl sm:text-5xl font-bold mb-3 tracking-tight">
-          Mens Collection
-        </h1>
-        <p className="text-muted-foreground">
-          Elevate your style with Rich Look
-        </p>
+        <h1 className="text-4xl font-bold">Mens Collection</h1>
+        <p className="text-muted-foreground">Premium wear</p>
       </div>
 
-      {/* CATEGORY FILTER */}
-      <div className="flex gap-3 overflow-x-auto px-4 pb-4">
-        {categories.map(cat => (
-          <button
-            key={cat}
-            onClick={() => setActiveCategory(cat)}
-            className={`px-4 py-2 rounded-full text-sm border transition ${
-              activeCategory === cat
-                ? "bg-black text-white"
-                : "bg-background hover:bg-gray-100"
-            }`}
-          >
-            {cat}
+      {/* FILTER */}
+      <div className="flex gap-3 px-4 overflow-x-auto pb-4">
+        {categories.map(c=>(
+          <button key={c}
+            onClick={()=>setActiveCategory(c)}
+            className={`px-4 py-2 rounded-full border ${
+              activeCategory===c?"bg-black text-white":""
+            }`}>
+            {c}
           </button>
         ))}
-      </div>
-
-      {/* PRODUCT COUNT */}
-      <div className="flex justify-between items-center px-4 mb-4">
-        <p className="text-sm text-muted-foreground">
-          {searchedProducts.length} Products
-        </p>
       </div>
 
       {/* SEARCH */}
       <div className="px-4 mb-4">
         <input
-          type="text"
-          placeholder="Search shirts, t-shirts, cargos..."
+          placeholder="Search..."
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black"
+          onChange={e=>setSearchQuery(e.target.value)}
+          className="w-full border px-4 py-2 rounded-lg"
         />
       </div>
 
       {/* PRODUCTS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-4 pb-16">
-        {searchedProducts.map(product => (
-          <div
-            key={product.id}
-            onClick={() => setSelectedProduct(product)}
-            className="bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group cursor-pointer"
-          >
-            {/* IMAGE */}
-            <img
-              src={product.image}
-              alt={product.name}
-              className="w-full h-56 object-cover transition-transform duration-500 group-hover:scale-105"
-            />
+        {products.map(p=>{
+          const imgs=p.images?.length?p.images:[p.image];
+          return(
+          <div key={p.id}
+            onClick={()=>{setSelectedProduct(p);setActiveImage(imgs[0]);setImageIndex(0);}}
+            className="bg-white rounded-xl shadow hover:shadow-xl cursor-pointer">
+
+            <img src={p.image} className="h-56 w-full object-cover"/>
 
             <div className="p-4">
+              <h3 className="font-semibold">{p.name}</h3>
 
-              {/* NAME */}
-              <h3 className="font-semibold mb-1">{product.name}</h3>
-
-              {/* RATING */}
-              <div className="flex items-center gap-1 mb-2">
-                <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-                <span className="text-sm">{product.rating}</span>
+              <div className="flex items-center gap-1">
+                <Star className="h-4 w-4 text-yellow-500 fill-yellow-500"/>
+                {p.rating}
               </div>
 
-              {/* PRICE */}
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-lg font-bold">
-                  {product.price}
-                </span>
-
-                {product.originalPrice && (
-                  <span className="text-sm line-through text-muted-foreground">
-                    {product.originalPrice}
-                  </span>
-                )}
+              <div className="flex gap-2 mt-2">
+                <span className="font-bold">{p.price}</span>
+                <span className="line-through text-sm">{p.originalPrice}</span>
               </div>
 
-              {/* SIZE SELECT */}
-              <div className="flex gap-2 mb-3 flex-wrap">
-                {getSizesForCategory(product.category).map(size => (
-                  <button
-                    key={size}
+              {/* sizes */}
+              <div className="flex gap-2 mt-2 flex-wrap">
+                {sizes(p.category).map(s=>(
+                  <button 
+                    key={s}
                     onClick={(e) => {
-  e.stopPropagation();
-  setSelectedSizes({
-    ...selectedSizes,
-    [product.id]: size
-  });
-}}
-                    className={`px-3 py-1.5 border rounded-md text-sm font-medium transition-all ${
-                      selectedSizes[product.id] === size
+                      e.stopPropagation();
+                      setSelectedSizes(prev => ({
+                        ...prev,
+                        [p.id]: s
+                      }));
+                    }}
+                    className={`px-3 py-1 border rounded transition ${
+                      selectedSizes[p.id] === s
                         ? "bg-black text-white border-black"
-                        : "hover:border-black hover:bg-gray-100"
-                    }`}
+                        : "bg-white text-black border-gray-300"
+                      }`}
                   >
-                    {size}
+                    {s}
                   </button>
                 ))}
               </div>
 
-              {/* ORDER BUTTON */}
-              <Button
-                className="w-full bg-black text-white rounded-lg py-3 hover:scale-[1.02] transition-all"
-                onClick={(e) => {
-  e.stopPropagation();
-  orderOnWhatsApp(product);
-}}
-              >
+              <Button className="w-full mt-3"
+                onClick={(e)=>{e.stopPropagation();order(p);}}>
                 Order on WhatsApp
               </Button>
-
             </div>
           </div>
-        ))}
+        )})}
       </div>
 
-      {/* EMPTY STATE */}
-      {searchedProducts.length === 0 && (
-        <div className="text-center py-10 text-muted-foreground">
-          No products found.
-        </div>
-      )}
+      {/* PREMIUM POPUP */}
+      {selectedProduct && (() => {
+        const imgs = selectedProduct.images?.length ? selectedProduct.images : [selectedProduct.image];
 
-      {selectedProduct && (
-  <div
-    className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center px-4"
-    onClick={() => setSelectedProduct(null)}
-  >
-    <div
-      className="bg-white rounded-2xl max-w-3xl w-full overflow-hidden shadow-2xl animate-fadeIn"
-      onClick={(e) => e.stopPropagation()}
-    >
+        return (
+          <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center px-4"
+            onClick={()=>setSelectedProduct(null)}>
 
-      <div className="grid grid-cols-1 md:grid-cols-2">
+            <div className="bg-white rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto grid grid-cols-1 md:grid-cols-2 relative"
+              onClick={(e)=>e.stopPropagation()}>
+              
+              <button
+              onClick={() => setSelectedProduct(null)}
+              className="absolute top-4 right-4 z-50 bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg text-xl hover:scale-110 transition"
+              >
+                ✕
+              </button>
 
-        {/* IMAGE */}
-        <div className="bg-gray-100">
-          <img
-            src={selectedProduct.image}
-            alt={selectedProduct.name}
-            className="w-full h-72 md:h-full object-cover"
-          />
-        </div>
+              {/* LEFT IMAGE */}
+              <div className="bg-gray-100 p-4">
+                <img
+                  src={activeImage || imgs[0]}
+                  onClick={()=>setIsFullscreen(true)}
+                  className="w-full h-80 object-cover rounded-xl cursor-zoom-in"
+                />
 
-        {/* DETAILS */}
-        <div className="p-6 flex flex-col justify-between">
+                <div className="flex gap-2 mt-3 overflow-x-auto">
+                  {imgs.map((img,i)=>(
+                    <img key={i}
+                      src={img}
+                      onClick={()=>{setActiveImage(img);setImageIndex(i);}}
+                      className="w-16 h-16 object-cover rounded border cursor-pointer"/>
+                  ))}
+                </div>
+              </div>
 
-          <div>
-            <h2 className="text-xl font-bold mb-2">
-              {selectedProduct.name}
-            </h2>
+              {/* RIGHT DETAILS */}
+              <div className="p-6 flex flex-col gap-4">
 
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-yellow-500">★</span>
-              <span className="text-sm">{selectedProduct.rating}</span>
-            </div>
+                <div>
+                  <h2 className="text-2xl font-bold">{selectedProduct.name}</h2>
 
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-2xl font-bold">
-                {selectedProduct.price}
-              </span>
+                  <div className="flex items-center gap-2 mt-2">
+                    ⭐ {selectedProduct.rating}
+                  </div>
 
-              {selectedProduct.originalPrice && (
-                <span className="line-through text-gray-400 text-sm">
-                  {selectedProduct.originalPrice}
-                </span>
-              )}
-            </div>
+                  <div className="flex gap-3 mt-3">
+                    <span className="text-xl font-bold">{selectedProduct.price}</span>
+                    <span className="line-through text-gray-400">{selectedProduct.originalPrice}</span>
+                  </div>
 
-            <p className="text-sm text-green-600 mb-4">
-              🔥 Limited Stock Available
-            </p>
+                  <p className="text-green-600 mt-3">🔥 Limited stock</p>
 
-            {/* SIZE */}
-            <p className="text-sm font-medium mb-2">Select Size</p>
+                  {/* size */}
+                  <div className="mt-4 flex gap-2 flex-wrap">
+                    {sizes(selectedProduct.category).map(s=>(
+                      <button 
+                        key={s}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedSizes(prev => ({
+                            ...prev,
+                            [selectedProduct.id]: s
+                          }));
+                        }}
+                        className={`px-4 py-2 border rounded transition ${
+                          selectedSizes[selectedProduct.id] === s
+                            ? "bg-black text-white border-black"
+                            : "bg-white text-black border-gray-300"
+                          }`}
+                        >
+                          {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-            <div className="flex gap-2 flex-wrap mb-6">
-              {getSizesForCategory(selectedProduct.category).map(size => (
-                <button
-                  key={size}
-                  onClick={() =>
-                    setSelectedSizes({
-                      ...selectedSizes,
-                      [selectedProduct.id]: size
-                    })
-                  }
-                  className={`px-4 py-2 border rounded-md text-sm ${
-                    selectedSizes[selectedProduct.id] === size
-                      ? "bg-black text-white"
-                      : "hover:border-black"
-                  }`}
-                >
-                  {size}
-                </button>
-              ))}
+                <div className="sticky bottom-0 bg-white pt-4">
+                  <Button 
+                    className="w-full"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      order(selectedProduct);
+                    }}
+                  > 
+                    Order on WhatsApp
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
+        );
+      })()}
 
-          {/* BUTTON */}
-          <Button
-            className="w-full bg-black text-white py-3 rounded-lg"
-            onClick={() => orderOnWhatsApp(selectedProduct)}
-          >
-            Order on WhatsApp
-          </Button>
+      {/* FULLSCREEN */}
+      {isFullscreen && selectedProduct && (() => {
+        const imgs = selectedProduct.images?.length ? selectedProduct.images : [selectedProduct.image];
 
-        </div>
-      </div>
+        return (
+          <div className="fixed inset-0 bg-black z-[999] flex items-center justify-center"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}>
 
-      {/* CLOSE */}
-      <button
-        className="absolute top-3 right-4 text-white text-2xl"
-        onClick={() => setSelectedProduct(null)}
-      >
-        ✕
-      </button>
+            <button className="absolute top-4 right-4 text-white text-3xl"
+              onClick={()=>setIsFullscreen(false)}>✕</button>
 
-    </div>
-  </div>
-)}
+            <img src={imgs[imageIndex]} className="max-h-[90vh] max-w-[95vw]"/>
+          </div>
+        );
+      })()}
+
     </div>
   );
 };

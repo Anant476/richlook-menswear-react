@@ -1,8 +1,8 @@
-import productDressShirt from "@/assets/product-dress-shirt.jpg";
+import productDressShirt from "@/assets/product-dress-shirt.jpg"; 
 import productOversizedTee from "@/assets/product-oversized-tee.jpg";
 import productChinoPants from "@/assets/product-chino-pants.jpg";
 import productCargoPants from "@/assets/product-cargo-pants.jpg";
-import productOversizedTShirt from "@/assets/product-mens-oversize-tshirt.jpeg"
+import productOversizedTShirt from "@/assets/product-mens-oversize-tshirt.jpeg";
 
 export const mensProducts = [
   {
@@ -12,6 +12,11 @@ export const mensProducts = [
     price: "₹2,999",
     originalPrice: "₹3,999",
     image: productDressShirt,
+    images: [
+      productDressShirt,
+      productDressShirt,
+      productDressShirt
+    ],
     rating: 4.8,
     badge: "Best Seller"
   },
@@ -22,6 +27,11 @@ export const mensProducts = [
     price: "₹1,299",
     originalPrice: "₹1,799",
     image: productOversizedTee,
+    images: [
+      productOversizedTee,
+      productOversizedTee,
+      productOversizedTee
+    ],
     rating: 4.6,
     badge: "Trending"
   },
@@ -32,6 +42,11 @@ export const mensProducts = [
     price: "₹2,499",
     originalPrice: "₹3,199",
     image: productDressShirt,
+    images: [
+      productDressShirt,
+      productDressShirt,
+      productDressShirt
+    ],
     rating: 4.7,
     badge: "New"
   },
@@ -42,6 +57,11 @@ export const mensProducts = [
     price: "₹2,499",
     originalPrice: "₹3,299",
     image: productChinoPants,
+    images: [
+      productChinoPants,
+      productChinoPants,
+      productChinoPants
+    ],
     rating: 4.7,
     badge: ""
   },
@@ -52,6 +72,11 @@ export const mensProducts = [
     price: "₹2,799",
     originalPrice: "₹3,699",
     image: productCargoPants,
+    images: [
+      productCargoPants,
+      productCargoPants,
+      productCargoPants
+    ],
     rating: 4.5,
     badge: "Limited"
   },
@@ -62,6 +87,11 @@ export const mensProducts = [
     price: "₹1,199",
     originalPrice: "₹1,599",
     image: productOversizedTee,
+    images: [
+      productOversizedTee,
+      productOversizedTee,
+      productOversizedTee
+    ],
     rating: 4.4,
     badge: "Hot"
   },
@@ -72,6 +102,11 @@ export const mensProducts = [
     price: "₹666",
     originalPrice: "₹999",
     image: productOversizedTShirt,
+    images: [
+      productOversizedTShirt,
+      productOversizedTShirt,
+      productOversizedTShirt
+    ],
     rating: 4.9,
     badge: "Best Seller"
   }
